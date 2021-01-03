@@ -75,8 +75,8 @@ _GNS_COPTS = select({
         "/nologo",
         "/TP",
         "/W3",
-        "/MD",
-        "/O2",
+        # "/MD",
+        # "/O2",
         "/Ob2",
         "/EHs-c-",
         "/wd4146",
@@ -88,7 +88,7 @@ _GNS_COPTS = select({
         "/GL",
     ],
     "@//:macos": [
-        "-O3",
+        # "-O3",
         "-fstack-protector-strong",
         "-fvisibility=hidden",
         "-fno-strict-aliasing",
@@ -124,7 +124,7 @@ _GNS_DEFINES = select({
         "_CRT_SECURE_NO_WARNINGS",
         "WIN32",
         "_WINDOWS",
-        "NDEBUG",
+        # "NDEBUG",
     ],
     "@//:macos": [
         "CRYPTO_DISABLE_ENCRYPT_WITH_PASSWORD",
@@ -136,7 +136,7 @@ _GNS_DEFINES = select({
         "STEAMNETWORKINGSOCKETS_CRYPTO_VALVEOPENSSL",
         "STEAMNETWORKINGSOCKETS_FOREXPORT",
         "VALVE_CRYPTO_ENABLE_25519",
-        "NDEBUG",
+        # "NDEBUG",
     ],
 })
 
