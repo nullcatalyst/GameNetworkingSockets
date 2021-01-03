@@ -10,8 +10,8 @@ option optimize_for = SPEED;
 // We don't use the service generation functionality
 option cc_generic_services = false;
 
-import "steamnetworkingsockets_messages_certs.proto";
-import "steamnetworkingsockets_messages.proto";
+import "src/common/steamnetworkingsockets_messages_certs.proto";
+import "src/common/steamnetworkingsockets_messages.proto";
 
 /// Control message ID.
 enum ESteamNetworkingUDPMsgID

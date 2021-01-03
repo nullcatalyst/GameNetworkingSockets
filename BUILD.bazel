@@ -1,0 +1,235 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+# mkdir build
+# cd build
+# cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DLTO=OFF -DUSE_STEAMWEBRTC=OFF -DProtobuf_USE_STATIC_LIBS=ON -DLIGHT_TESTS=OFF -DGAMENETWORKINGSOCKETS_BUILD_EXAMPLES=OFF -DGAMENETWORKINGSOCKETS_BUILD_TESTS=OFF ..
+# cmake --build .
+# open compile_commands.json
+
+# These config vlues are specified here to allow building this repo standalone.
+# Even though they exist here, prefer the use of "@//:windows", etc. so that they may be overridden
+# in a workspace that uses this one.
+config_setting(
+    name = "windows",
+    constraint_values = [
+        "@platforms//os:windows",
+    ],
+)
+
+config_setting(
+    name = "macos",
+    constraint_values = [
+        "@platforms//os:macos",
+    ],
+)
+
+config_setting(
+    name = "linux",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+)
+
+_GNS_SRC_HDRS = glob([
+    "src/**/*.h",
+])
+
+_GNS_SRCS = [
+    "src/common/crypto.cpp",
+    "src/common/crypto_textencode.cpp",
+    "src/common/keypair.cpp",
+    "src/common/steamid.cpp",
+    "src/steamnetworkingsockets/clientlib/csteamnetworkingsockets.cpp",
+    "src/steamnetworkingsockets/clientlib/csteamnetworkingmessages.cpp",
+    "src/steamnetworkingsockets/clientlib/steamnetworkingsockets_flat.cpp",
+    "src/steamnetworkingsockets/clientlib/steamnetworkingsockets_connections.cpp",
+    "src/steamnetworkingsockets/clientlib/steamnetworkingsockets_lowlevel.cpp",
+    "src/steamnetworkingsockets/clientlib/steamnetworkingsockets_p2p.cpp",
+    "src/steamnetworkingsockets/clientlib/steamnetworkingsockets_p2p_ice.cpp",
+    "src/steamnetworkingsockets/clientlib/steamnetworkingsockets_snp.cpp",
+    "src/steamnetworkingsockets/clientlib/steamnetworkingsockets_udp.cpp",
+    "src/steamnetworkingsockets/steamnetworkingsockets_certs.cpp",
+    "src/steamnetworkingsockets/steamnetworkingsockets_certstore.cpp",
+    "src/steamnetworkingsockets/steamnetworkingsockets_shared.cpp",
+    "src/steamnetworkingsockets/steamnetworkingsockets_stats.cpp",
+    "src/steamnetworkingsockets/steamnetworkingsockets_thinker.cpp",
+    "src/tier0/dbg.cpp",
+    "src/tier0/platformtime.cpp",
+    "src/tier1/netadr.cpp",
+    "src/tier1/utlbuffer.cpp",
+    "src/tier1/utlmemory.cpp",
+    "src/tier1/ipv6text.c",
+    "src/vstdlib/strtools.cpp",
+    "src/common/crypto_openssl.cpp",
+    "src/common/opensslwrapper.cpp",
+    "src/common/crypto_25519_openssl.cpp",
+]
+
+_GNS_HDRS = glob([
+    "include/**/*.h",
+])
+
+_GNS_COPTS = select({
+    "@//:windows": [
+        "/nologo",
+        "/TP",
+        "/W3",
+        "/MD",
+        "/O2",
+        "/Ob2",
+        "/EHs-c-",
+        "/wd4146",
+        "/wd4530",
+        "/wd4244",
+        "/wd4251",
+        "/wd4267",
+        "/GR-",
+        "/GL",
+    ],
+    "@//:macos": [
+        "-O3",
+        "-fstack-protector-strong",
+        "-fvisibility=hidden",
+        "-fno-strict-aliasing",
+        "-Wall",
+        "-Wno-unknown-pragmas",
+        "-Wno-sign-compare",
+        "-Wno-unused-local-typedef",
+        "-Wno-unused-const-variable",
+        "-Wno-nested-anon-types",
+        "-fvisibility-inlines-hidden",
+        "-Wno-reorder",
+        "-Wno-non-virtual-dtor",
+        "-Wno-zero-as-null-pointer-constant",
+        "-fno-exceptions",
+        "-fno-rtti",
+        # "-std=gnu++11",
+    ],
+})
+
+_GNS_DEFINES = select({
+    "@//:windows": [
+        "CRYPTO_DISABLE_ENCRYPT_WITH_PASSWORD",
+        "ENABLE_OPENSSLCONNECTION",
+        "GOOGLE_PROTOBUF_NO_RTTI",
+        "GameNetworkingSockets_EXPORTS",
+        "PROTOBUF_USE_DLLS",
+        "STEAMNETWORKINGSOCKETS_CRYPTO_25519_OPENSSL",
+        "STEAMNETWORKINGSOCKETS_CRYPTO_VALVEOPENSSL",
+        "STEAMNETWORKINGSOCKETS_FOREXPORT",
+        "VALVE_CRYPTO_ENABLE_25519",
+        "_CRT_NONSTDC_NO_WARNINGS",
+        "_CRT_SECURE_NO_WARNINGS",
+        "WIN32",
+        "_WINDOWS",
+        "NDEBUG",
+    ],
+    "@//:macos": [
+        "CRYPTO_DISABLE_ENCRYPT_WITH_PASSWORD",
+        "ENABLE_OPENSSLCONNECTION",
+        "GOOGLE_PROTOBUF_NO_RTTI",
+        "OSX",
+        "POSIX",
+        "STEAMNETWORKINGSOCKETS_CRYPTO_25519_OPENSSL",
+        "STEAMNETWORKINGSOCKETS_CRYPTO_VALVEOPENSSL",
+        "STEAMNETWORKINGSOCKETS_FOREXPORT",
+        "VALVE_CRYPTO_ENABLE_25519",
+        "NDEBUG",
+    ],
+})
+
+cc_library(
+    name = "game_networking_sockets",
+    srcs = _GNS_SRC_HDRS + _GNS_SRCS,
+    hdrs = _GNS_HDRS,
+    copts = _GNS_COPTS,
+    defines = _GNS_DEFINES,
+    includes = [
+        "include",
+        "src",
+        "src/common",
+        "src/public",
+    ],
+    strip_include_prefix = "include",
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        ":messages_certs",
+        ":messages_udp",
+        ":messages",
+        "@openssl//:crypto",
+        "@openssl//:ssl",
+    ],
+)
+
+cc_library(
+    name = "messages_certs",
+    deps = [
+        ":messages_certs_cc_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "messages_certs_cc_proto",
+    deps = [
+        ":messages_certs_proto",
+    ],
+)
+
+proto_library(
+    name = "messages_certs_proto",
+    srcs = [
+        "src/common/steamnetworkingsockets_messages_certs.proto",
+    ],
+)
+
+cc_library(
+    name = "messages_udp",
+    deps = [
+        ":messages_udp_cc_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "messages_udp_cc_proto",
+    deps = [
+        ":messages_udp_proto",
+    ],
+)
+
+proto_library(
+    name = "messages_udp_proto",
+    srcs = [
+        "src/common/steamnetworkingsockets_messages_udp.proto",
+    ],
+    deps = [
+        ":messages_certs_proto",
+        ":messages_proto",
+    ],
+)
+
+cc_library(
+    name = "messages",
+    deps = [
+        ":messages_cc_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "messages_cc_proto",
+    deps = [
+        ":messages_proto",
+    ],
+)
+
+proto_library(
+    name = "messages_proto",
+    srcs = [
+        "src/common/steamnetworkingsockets_messages.proto",
+    ],
+    deps = [
+        ":messages_certs_proto",
+    ],
+)

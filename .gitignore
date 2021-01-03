@@ -49,3 +49,5 @@ perf.data.old
 
 *partner*
 
+# Bazel directories
+/bazel-*
