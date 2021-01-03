@@ -105,6 +105,7 @@ _GNS_COPTS = select({
         "-fno-exceptions",
         "-fno-rtti",
         # "-std=gnu++11",
+        "-flto",
     ],
 })
 
@@ -114,7 +115,7 @@ _GNS_DEFINES = select({
         "ENABLE_OPENSSLCONNECTION",
         "GOOGLE_PROTOBUF_NO_RTTI",
         "GameNetworkingSockets_EXPORTS",
-        "PROTOBUF_USE_DLLS",
+        # "PROTOBUF_USE_DLLS",
         "STEAMNETWORKINGSOCKETS_CRYPTO_25519_OPENSSL",
         "STEAMNETWORKINGSOCKETS_CRYPTO_VALVEOPENSSL",
         "STEAMNETWORKINGSOCKETS_FOREXPORT",
@@ -139,6 +140,15 @@ _GNS_DEFINES = select({
     ],
 })
 
+_GNS_LINKOPTS = select({
+    "@//:windows": [
+        "/LTCG",
+    ],
+    "@//:macos": [
+        "-flto",
+    ],
+})
+
 cc_library(
     name = "game_networking_sockets",
     srcs = _GNS_SRC_HDRS + _GNS_SRCS,
@@ -156,9 +166,9 @@ cc_library(
         "//visibility:public",
     ],
     deps = [
+        ":messages",
         ":messages_certs",
         ":messages_udp",
-        ":messages",
         "@openssl//:crypto",
         "@openssl//:ssl",
     ],
